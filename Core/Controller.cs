@@ -23,18 +23,18 @@ namespace RobotService.Core
         }
         public string CreateRobot(string model, string typeName)
         {
-            if (typeName != "DomesticAssistant" || typeName != "IndustrialAssistant")
+            if (typeName != "DomesticAssistant" && typeName != "IndustrialAssistant")
             {
                 return $"Robot type {typeName} cannot be created.";
 
             }
 
             IRobot robot = null;
-           
+
             if (typeName == "DomesticAssistant")
             {
                 robot = new DomesticAssistant(model);
-              
+
             }
             else if (typeName == "IndustrialAssistant")
             {
@@ -47,7 +47,7 @@ namespace RobotService.Core
 
         public string CreateSupplement(string typeName)
         {
-            if(typeName != "SpecializedArm" || typeName != "LaserRadar" )
+            if (typeName != "SpecializedArm" || typeName != "LaserRadar")
             {
                 return $"{typeName} is not compatible with our robots.";
             }
@@ -67,8 +67,8 @@ namespace RobotService.Core
         public string PerformService(string serviceName, int intefaceStandard, int totalPowerNeeded)
         {
             List<IRobot> robotsToPerform = robots.Models().Where(x => x.InterfaceStandards.Contains(intefaceStandard)).OrderByDescending(x => x.BatteryLevel).ToList();
-            
-                int count = 0;
+
+            int count = 0;
             if (robotsToPerform.Count == 0)
             {
                 return $"Unable to perform service, {intefaceStandard} not supported!";
@@ -76,7 +76,7 @@ namespace RobotService.Core
 
             int sumOfBatteryLevels = robotsToPerform.Sum(x => x.BatteryLevel);
 
-            if(sumOfBatteryLevels < totalPowerNeeded)
+            if (sumOfBatteryLevels < totalPowerNeeded)
             {
                 return $"{serviceName} cannot be executed! {totalPowerNeeded - sumOfBatteryLevels} more power needed.";
             }
@@ -86,14 +86,14 @@ namespace RobotService.Core
                 {
                     if (robot.BatteryLevel >= totalPowerNeeded)
                     {
-                       
+
                         robot.ExecuteService(totalPowerNeeded);
                         count++;
                         break;
                     }
                     else if (robot.BatteryLevel < totalPowerNeeded)
                     {
-                      totalPowerNeeded -= robot.BatteryLevel;
+                        totalPowerNeeded -= robot.BatteryLevel;
                         robot.ExecuteService(robot.BatteryLevel);
                         count++;
                     }
@@ -104,7 +104,16 @@ namespace RobotService.Core
 
         public string Report()
         {
-            throw new NotImplementedException();
+            List<IRobot> robotsToPrint = robots.Models().OrderByDescending(x => x.BatteryLevel).ThenBy(x => x.BatteryCapacity).ToList();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var robot in robotsToPrint)
+            {
+                sb.AppendLine(robot.ToString());
+
+            }
+            return sb.ToString().TrimEnd();
         }
 
         public string RobotRecovery(string model, int minutes)
@@ -129,6 +138,6 @@ namespace RobotService.Core
             robot.InstallSupplement(supplement);
             supplements.RemoveByName(supplementTypeName);
             return $"{model} is upgraded with {supplementTypeName}.";
-    }
+        }
     }
 }
